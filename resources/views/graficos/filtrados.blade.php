@@ -10,8 +10,9 @@
             margin: 1em auto;
         }
 
-        #container {
+        #container, #containerVallas, #containerTransmilenio {
             height: 400px;
+            margin-bottom: 1em;
         }
 
         .highcharts-data-table table {
@@ -61,14 +62,27 @@
     <figure class="highcharts-figure">
         <div id="container"></div>
     </figure>
+    <figure class="highcharts-figure">
+        <div id="containerVallas"></div>
+    </figure>
+    <figure class="highcharts-figure">
+        <div id="containerTransmilenio"></div>
+    </figure>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const productos = @json($productosSeleccionados->pluck('producto'));
             const porcentajeTipolugar1List = @json($porcentajesTipolugar1List);
             const porcentajeTipolugar3List = @json($porcentajesTipolugar3List);
-            console.log(productos);
-            console.log(porcentajeTipolugar1List);
-            console.log(porcentajeTipolugar3List);
+
+            const porcentajeTotalList = productos.map((producto, index) => {
+                return porcentajeTipolugar1List[index] + porcentajeTipolugar3List[index];
+            });
+
+            const categoriasPersonalizadas = productos.map((producto, index) => {
+                return `${producto} (${porcentajeTotalList[index]}%)`;
+            });
+
+            // Gráfico de columnas
             Highcharts.chart('container', {
                 chart: {
                     type: 'column'
@@ -77,7 +91,7 @@
                     text: 'Porcentajes de Productos por Tipo de Lugar'
                 },
                 xAxis: {
-                    categories: productos,
+                    categories: categoriasPersonalizadas,
                     title: {
                         text: 'Productos'
                     }
@@ -106,10 +120,70 @@
                         data: porcentajeTipolugar3List,
                         color: '#B9F4DC'
                     }
-                ] 
-                
+                ]
+            });
+
+            // Gráfico de torta para Vallas
+            Highcharts.chart('containerVallas', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: 'Porcentajes de Vallas por Producto'
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                            connectorColor: 'silver'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Vallas',
+                    data: productos.map((producto, index) => {
+                        return { name: producto, y: porcentajeTipolugar1List[index] };
+                    })
+                }]
+            });
+
+            // Gráfico de torta para Transmilenio
+            Highcharts.chart('containerTransmilenio', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: 'Porcentajes de Transmilenio por Producto'
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                            connectorColor: 'silver'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Transmilenio',
+                    data: productos.map((producto, index) => {
+                        return { name: producto, y: porcentajeTipolugar3List[index] };
+                    })
+                }]
             });
         });
     </script>
 </body>
 </html>
+
