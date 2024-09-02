@@ -28,10 +28,10 @@
     var porcentajeVallas2 = @json($porcentajes2);
 	var propietarios3 = @json($propietarioNombre3);
     var porcentajeVallas3 = @json($porcentajes3);
-
+    var total = @json($total);
     console.log(propietarios);
     console.log(porcentajeVallas);
-
+	console.log(total);
     Highcharts.chart('container1', {
             chart: {
                 type: 'column',
