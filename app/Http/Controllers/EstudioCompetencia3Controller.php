@@ -32,11 +32,10 @@ class EstudioCompetencia3Controller extends Controller
                              JOIN lugares ON datos.lugares_id = lugares.id
                              JOIN anunciantes_productos ON datos.producto2 = anunciantes_productos.id
                              WHERE lugares.estado = 1
-                             AND lugares.usos_id = ' . $uso . '
-                             ' . ($uso == 1 ? 'AND anunciantes_productos.tipoPauta = "comercial"' : '') . '
                              AND lugares.tipolugares_id = ' . $unidad . '
-                             AND datos.created_at <= "' . $ultimoDiaMes . '"
+                             AND lugares.usos_id = ' . $uso . '
                              
+                             AND datos.created_at <= "' . $ultimoDiaMes . '"
                              GROUP BY lugares.tipolugares_id) AS total_lugar'),
                 'lugares.tipolugares_id',
                 '=',
@@ -49,24 +48,18 @@ class EstudioCompetencia3Controller extends Controller
             )
             ->where('lugares.estado', 1)
             ->where('lugares.usos_id', $uso)
-            ->when($uso == 1, function ($query) {
-                return $query->where('anunciantes_productos.tipoPauta', 'comercial');
-            })
             ->where('lugares.tipolugares_id', $unidad)
-            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             
+            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->when($empresa != 0, function($query) use ($empresa) {
                 return $query->where('propietarios.id', $empresa);
             })
             ->groupBy('propietarios.descripcion', 'lugares.tipolugares_id', 'total_lugar.total')
             ->get();
         $propietarioNombre = $datosTipo1->pluck('propietario_nombre');
-        $total = $datosTipo1->pluck('total');
-
         $porcentajes = $datosTipo1->pluck('porcentaje')->map(function ($value) {
             return (float) $value;
         });
-
 
         $datosTipo2 = DB::connection('mysql2')
             ->table('datos')
@@ -102,7 +95,7 @@ class EstudioCompetencia3Controller extends Controller
             ->where('lugares.tipolugares_id', $unidad)
             ->where('lugares.tipovalla_id', 2)
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
-            ->when($empresa != 0, function($query) use ($empresa) {
+            ->when($empresa != 0, function ($query) use ($empresa) {
                 return $query->where('propietarios.id', $empresa);
             })
             ->groupBy('propietarios.descripcion', 'lugares.tipolugares_id', 'total_lugar.total')
@@ -148,7 +141,7 @@ class EstudioCompetencia3Controller extends Controller
             ->where('lugares.tipolugares_id', $unidad)
             ->where('lugares.tipovalla_id', 1)
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
-            ->when($empresa != 0, function($query) use ($empresa) {
+            ->when($empresa != 0, function ($query) use ($empresa) {
                 return $query->where('propietarios.id', $empresa);
             })
             ->groupBy('propietarios.descripcion', 'lugares.tipolugares_id', 'total_lugar.total')
@@ -159,6 +152,6 @@ class EstudioCompetencia3Controller extends Controller
             return (float) $value;
         });
 
-        return view('estudio-competencia.graficos.ocupacion', compact('total','datosTipo1', 'datosTipo2', 'datosTipo3', 'propietarioNombre', 'porcentajes', 'propietarioNombre2', 'porcentajes2', 'propietarioNombre3', 'porcentajes3'));
+        return view('estudio-competencia.graficos.ocupacion', compact('datosTipo1', 'datosTipo2', 'datosTipo3', 'propietarioNombre', 'porcentajes', 'propietarioNombre2', 'porcentajes2', 'propietarioNombre3', 'porcentajes3'));
     }
 }
