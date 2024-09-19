@@ -293,8 +293,8 @@ class EstudioCompetencia3Controller extends Controller
 
 
 
-    public function participacion($unidad, $periodo, $empresa, $uso)
-        {
+    public function ocupacion($unidad, $periodo, $empresa, $uso)
+    {
         // Crear el primer y último día del mes
         list($mes, $anno) = explode("-", $periodo);
         $mes = (int)$mes;
@@ -306,10 +306,11 @@ class EstudioCompetencia3Controller extends Controller
         // Obtener tipo de publicidades
         $tipoPublicidades = DB::connection('mysql2')->table('tipopublicidades')->where('tipolugares_id', $unidad)->get();
         // Filtrar IDs
-        $tipoPublicidades = DB::connection('mysql2')->table('tipopublicidades')->where('tipolugares_id', $unidad)->get();
         $tipoPublicidadesId = $tipoPublicidades->pluck('id');
         $tipoPublicidadesLedId = $tipoPublicidades->where('tecnologia', 1)->pluck('id')->toArray();
         $tipoPublicidadesTradicionalId = $tipoPublicidades->where('tecnologia', 0)->pluck('id')->toArray();
+
+        
 
         $anunciantesProductos = DB::connection('mysql2')
             ->table('anunciantes_productos')
@@ -324,7 +325,7 @@ class EstudioCompetencia3Controller extends Controller
                     GROUP_CONCAT(DISTINCT
                         CASE 
                             WHEN {$unidad} = 1 THEN lugares.propietarios_id 
-                            ELSE datos.comercializador2_id 
+                            ELSE datos.comercializador
                         END
                         SEPARATOR ','
                     ) as comercializadorId
@@ -347,17 +348,19 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data2->where('lugares.propietarios_id', $empresa);    
             } else {
-                $data2->where('datos.comercializador2_id', $empresa);
+                $data2->where('datos.comercializador', $empresa);
             }    
         }
 
+        $data2->where('datos.tipopautas_id', '=', 1);
+        /*
         if($uso==1){
             $data2->where('datos.tipopautas_id', '=', 1);
         }
         if($uso==2){
             $data2->where('datos.tipopautas_id', '!=', 1);
         }
-        
+        */
 
         $data2->groupBy('lugares_id','pantallaNumero');
         $datos = $data2->get();
@@ -389,7 +392,7 @@ class EstudioCompetencia3Controller extends Controller
 
                     if (!isset($datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
                         $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero] = [];
-                        //$datos2[$comercializadorId]['ventas']++;
+                       
                     }
                     
                     if (!in_array($anunciantesProductos[$producto2Id], $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
@@ -400,108 +403,313 @@ class EstudioCompetencia3Controller extends Controller
             }
         }
 
-        $totalPautaComercial = collect($datos2)->sum(function($item) {
-            return $item['total'];
-        });
-
-        $datos2 = collect($datos2)->sortByDesc(function($item) use ($totalPautaComercial) {
-            return ($item['ventas'] * 100 / ($totalPautaComercial * 6));
+        $datos2 = collect($datos2)->sortByDesc(function($item) {
+            return ($item['ventas'] * 100 / ($item['total'] * 6));
         })->all();
+
+        $aplicarMultiplicacion = ($unidad != 1);
 
 
         switch ($unidad) {
-            case 1: // vallas
-        
-               
+            case 1: //vallas
+                
                 $data2 = DB::connection('mysql2')->table('datos')
                     ->select(
                         'datos.lugares_id',
-                        DB::raw("GROUP_CONCAT(DISTINCT
-                            CASE 
-                                WHEN {$unidad} = 1 THEN lugares.propietarios_id 
-                                ELSE datos.comercializador2_id 
-                            END SEPARATOR ',') as comercializadorId"
-                        ),
-                        DB::raw("GROUP_CONCAT(DISTINCT datos.producto2 SEPARATOR ',') as producto2"),
+                        DB::raw("
+                            GROUP_CONCAT(DISTINCT
+                                CASE 
+                                    WHEN {$unidad} = 1 THEN lugares.propietarios_id 
+                                    ELSE datos.comercializador
+                                END
+                                SEPARATOR ','
+                            ) as comercializadorId
+                        "),
+                        DB::raw("
+                            GROUP_CONCAT(DISTINCT
+                                datos.producto2
+                                SEPARATOR ','
+                            ) as producto2
+                        "),
                         'datos.comercializador',
                         'datos.pantallaNumero',
-                        'datos.tipopublicidades_id' ,
-                        'lugares.tipovalla_id'
-
+                        'datos.tipopublicidades_id'
                     )
                     ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
-                    // ->whereIn('datos.tipopublicidades_id', [1, 2]) // Usar IDs 1 y 2
-                    ->whereIn('lugares.tipovalla_id', [1, 2])
+                    ->whereIn('datos.tipopublicidades_id', array_merge($tipoPublicidadesTradicionalId, $tipoPublicidadesLedId))
                     ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
                     ->whereDate('datos.created_at', '>=', $primerDiaMes);
-        
-                if($empresa != 0){
-                    $data2->where('lugares.propietarios_id', $empresa);
+                if($empresa!=0){
+                    if ($unidad == 1) {
+                        $data2->where('lugares.propietarios_id', $empresa);    
+                    } else {
+                        $data2->where('datos.comercializador', $empresa);
+                    }    
                 }
-        
-                if($uso == 1){
+
+                $data2->where('datos.tipopautas_id', '=', 1);
+                /*
+                if($uso==1){
                     $data2->where('datos.tipopautas_id', '=', 1);
                 }
-                if($uso == 2){
+                if($uso==2){
                     $data2->where('datos.tipopautas_id', '!=', 1);
                 }
-        
-                $data2->groupBy('lugares_id','pantallaNumero');
+                */
+
+                $data2->groupBy('lugares_id','pantallaNumero','tipopublicidades_id');
                 $datos = $data2->get();
-        
+
+
                 // Procesamiento de datos
                 $datos2 = [];
                 foreach ($datos as $value) {
                     $comercializadorId = $value->comercializadorId;
                     $comercializadorIdsArray = explode(',', $comercializadorId);
-        
+
                     if (count($comercializadorIdsArray) > 1) {
                         $comercializadorId = $value->comercializador;
                     }
-        
+
                     if (!isset($datos2[$comercializadorId])) {
                         $datos2[$comercializadorId] = [
                             'total' => 0,
                             'ventas' => 0
                         ];
                     }
-        
-                    // Multiplicar por 6 si el tipopublicidades_id es 2 (LED)
-                    $multiplicar = ($value->tipovalla_id == 2) ? 6 : 1;
-        
-                    $datos2[$comercializadorId]['total'] += $multiplicar;
-        
+
+                    // $datos2[$comercializadorId]['total']++;
+
+                    if (in_array($value->tipopublicidades_id, $tipoPublicidadesTradicionalId)) {
+                        $datos2[$comercializadorId]['total']++; // Publicidad tradicional (id = 1)
+                    } elseif (in_array($value->tipopublicidades_id, $tipoPublicidadesLedId)) {
+                        $datos2[$comercializadorId]['total'] += 6; // Publicidad LED (id = 2)
+                    }
+                    
+
                     $producto2Array = explode(",", $value->producto2);
-        
+
                     foreach ($producto2Array as $producto2Id) {
-                        if (!isset($datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
-                            $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero] = [];
-                        }
-        
-                        if (!in_array($anunciantesProductos[$producto2Id], $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
-                            $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero][] = $anunciantesProductos[$producto2Id];
-                            $datos2[$comercializadorId]['ventas'] += $multiplicar;
-                        }
+
+                            if (!isset($datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
+                                $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero] = [];
+                                //$datos2[$comercializadorId]['ventas']++;
+                            }
+                            
+                            if (!in_array($anunciantesProductos[$producto2Id], $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
+                                $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero][] = $anunciantesProductos[$producto2Id];
+                                $datos2[$comercializadorId]['ventas']++;
+                            }
+
                     }
                 }
-        
-                $totalPautaComercial = collect($datos2)->sum(function($item) {
-                    return $item['total'];
-                });
-                // dd($datos2);
-        
+
+                // $datos2 = collect($datos2)->sortByDesc(function($item) {
+                //     return ($item['ventas'] * 100 / ($item['total'] * 6));
+                // })->all();
+                // $datos2 = collect($datos2)->sortByDesc(function($item) {
+                //     return ($item['ventas'] * 100 /($item['total'])); 
+                // })->all();
+
+                $datos2 = collect($datos2)->map(function($item) {
+                    $item['porcentaje'] = ($item['ventas'] * 100 / ($item['total']));
+                    return $item;
+                })->sortByDesc('porcentaje')->all();
                 
-                $datos2 = collect($datos2)->sortByDesc(function($item) use ($totalPautaComercial) {
-                    return ($item['ventas'] * 100 / $totalPautaComercial); 
-                })->all();
-                
-        
-                return view('estudio-competencia.graficos.participacionVallas', compact('empresas', 'datos2', 'totalPautaComercial'));
+                $aplicarMultiplicacion = ($unidad != 1);
+
+
+
+
+
+                return view('estudio-competencia.graficos.ocupacionOtros', compact('empresas', 'datos2', 'aplicarMultiplicacion'));
             break;
-        
+
             default:
-                return view('estudio-competencia.graficos.participacionOtros', compact('empresas', 'datos2', 'totalPautaComercial'));
+                return view('estudio-competencia.graficos.ocupacionOtros',compact('empresas','datos2', 'aplicarMultiplicacion'));
             break;
         }
-    }        
+    }
+
+    public function rankingAnunciantes($unidad, $periodo, $empresa, $uso)
+    {
+        // Crear el primer y último día del mes
+        list($mes, $anno) = explode("-", $periodo);
+        $mes = (int)$mes;
+        $anno = (int)$anno;
+        $ultimoDiaMes = Carbon::create($anno, $mes)->endOfMonth()->endOfDay();
+        $primerDiaMes = Carbon::create($anno, $mes)->startOfMonth();
+
+        // Obtener los productos por anunciantes
+        $anunciantesProductos = DB::connection('mysql2')
+            ->table('anunciantes_productos')
+            ->pluck('anunciante_id', 'id')
+            ->all();
+
+        // Consulta principal para obtener los datos por tipo de publicidad
+        $data = DB::connection('mysql2')->table('datos')
+            ->select(
+                'datos.producto2',
+                'datos.tipopublicidades_id',
+                DB::raw('COUNT(datos.id) as total')
+            )
+            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
+            ->whereDate('datos.created_at', '>=', $primerDiaMes)
+            ->groupBy('datos.producto2', 'datos.tipopublicidades_id');
+
+        // Filtrar por empresa
+        // if ($empresa != 0) {
+        //     $data->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
+        //         ->where('lugares.propietarios_id', $empresa);
+        // }
+        if($empresa!=0){
+            if ($unidad == 1) {
+                $data->where('lugares.propietarios_id', $empresa);    
+            } else {
+                $data->where('datos.comercializador', $empresa);
+            }    
+        }
+
+        // Filtrar por uso
+        if ($uso == 1) {
+            $data->where('datos.tipopautas_id', '=', 1);
+        } elseif ($uso == 2) {
+            $data->where('datos.tipopautas_id', '!=', 1);
+        }
+
+        $data = $data->get();
+
+        // Inicializar el arreglo para almacenar el ranking
+        $ranking = [];
+
+        // Procesar los datos y agruparlos por anunciante
+        foreach ($data as $value) {
+            $anuncianteId = $anunciantesProductos[$value->producto2];
+
+            // Si no existe, inicializar el arreglo para el anunciante
+            if (!isset($ranking[$anuncianteId])) {
+                $ranking[$anuncianteId] = [
+                    'nombre' => DB::connection('mysql2')->table('anunciantes')->where('id', $anuncianteId)->value('anunciante'),
+                    'tradicional' => 0,
+                    'led' => 0,
+                    'total' => 0
+                ];
+            }
+
+            // Sumar según el tipo de publicidad
+            if ($value->tipopublicidades_id == 0) {
+                $ranking[$anuncianteId]['tradicional'] += $value->total;
+            } elseif ($value->tipopublicidades_id == 1) {
+                $ranking[$anuncianteId]['led'] += $value->total;
+            }
+
+            // Calcular el total combinado
+            $ranking[$anuncianteId]['total'] = $ranking[$anuncianteId]['tradicional'] + $ranking[$anuncianteId]['led'];
+        }
+
+        // Ordenar el ranking por el total
+        usort($ranking, function ($a, $b) {
+            return $b['total'] - $a['total'];
+        });
+        dd($ranking);
+
+        // Retornar los datos a la vista
+        return view('estudio-competencia.graficos.rankingAnunciantes', compact('ranking'));
+    }
+
+
+    public function rankingClientes($unidad, $periodo, $empresa, $uso)
+    {
+        // Crear el primer y último día del mes
+        list($mes, $anno) = explode("-", $periodo);
+        $mes = (int)$mes;
+        $anno = (int)$anno;
+        $ultimoDiaMes = Carbon::create($anno, $mes)->endOfMonth()->endOfDay();
+        $primerDiaMes = Carbon::create($anno, $mes)->startOfMonth();
+
+        // Obtener tipo de publicidades para la unidad seleccionada
+        $tipoPublicidades = DB::connection('mysql2')->table('tipopublicidades')->where('tipolugares_id', $unidad)->get();
+        $tipoPublicidadesId = $tipoPublicidades->pluck('id');
+        $tipoPublicidadesLedId = $tipoPublicidades->where('tecnologia', 1)->pluck('id')->toArray();
+        $tipoPublicidadesTradicionalId = $tipoPublicidades->where('tecnologia', 0)->pluck('id')->toArray();
+
+        // Obtener los productos anunciantes
+        $anunciantesProductos = DB::connection('mysql2')
+            ->table('anunciantes_productos')
+            ->pluck('anunciante_id', 'id')
+            ->all();
+
+        // Consulta principal para los datos
+        $data2 = DB::connection('mysql2')->table('datos')
+            ->select(
+                'datos.clientes_id',
+                DB::raw("
+                    GROUP_CONCAT(DISTINCT
+                        datos.producto2
+                        SEPARATOR ','
+                    ) as producto2
+                "),
+                DB::raw("
+                    GROUP_CONCAT(DISTINCT
+                        CASE
+                            WHEN tipopublicidades.tecnologia = 1 THEN 'LED'
+                            WHEN tipopublicidades.tecnologia = 0 THEN 'Tradicional'
+                        END
+                        SEPARATOR ','
+                    ) as tipoPublicidad
+                "),
+                DB::raw("
+                    COUNT(CASE WHEN tipopublicidades.tecnologia = 0 THEN 1 END) as totalTradicional,
+                    COUNT(CASE WHEN tipopublicidades.tecnologia = 1 THEN 1 END) as totalLed
+                ")
+            )
+            ->join('tipopublicidades', 'datos.tipopublicidades_id', '=', 'tipopublicidades.id')
+            ->whereIn('datos.tipopublicidades_id', array_merge($tipoPublicidadesTradicionalId, $tipoPublicidadesLedId))
+            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
+            ->whereDate('datos.created_at', '>=', $primerDiaMes);
+
+        // Filtrar por empresa
+        if ($empresa != 0) {
+            $data2->where('datos.comercializador2_id', $empresa);
+        }
+
+        // Filtrar por uso
+        if ($uso == 1) {
+            $data2->where('datos.tipopautas_id', '=', 1);
+        } elseif ($uso == 2) {
+            $data2->where('datos.tipopautas_id', '!=', 1);
+        }
+
+        $data2->groupBy('datos.clientes_id');
+        $datos = $data2->get();
+
+        // Procesamiento de datos
+        $rankingClientes = [];
+        foreach ($datos as $value) {
+            $clienteId = $value->clientes_id;
+            $totalTradicional = $value->totalTradicional;
+            $totalLed = $value->totalLed;
+            $total = $totalTradicional + $totalLed;
+
+            if (!isset($rankingClientes[$clienteId])) {
+                $rankingClientes[$clienteId] = [
+                    'nombre' => DB::connection('mysql2')->table('clientes')->where('id', $clienteId)->value('cliente'),
+                    'totalTradicional' => 0,
+                    'totalLed' => 0,
+                    'total' => 0
+                ];
+            }
+
+            $rankingClientes[$clienteId]['totalTradicional'] += $totalTradicional;
+            $rankingClientes[$clienteId]['totalLed'] += $totalLed;
+            $rankingClientes[$clienteId]['total'] += $total;
+        }
+
+        // Convertir a colección y ordenar
+        $rankingClientes = collect($rankingClientes)->sortByDesc('total')->values()->all();
+
+        return view('estudio-competencia.graficos.rankingClientes', compact('rankingClientes'));
+    }
+
+
 }

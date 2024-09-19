@@ -31,7 +31,7 @@ var chart = new Highcharts.Chart({
         pointFormat: 'Pantallas: {point.y}'
     },
     title: {
-        text: 'Participación por empresa propietaria de pantallas LED con respecto a toda la pauta comercial vendida',
+        text: 'Participación por empresa propietaria con respecto a toda la pauta comercial vendida',
         align: 'left'
     },
     legend: {
