@@ -32,7 +32,7 @@
             <div class="col-12 m-0 p-0 border ">
                 <div class="row p-0 m-0 ps-2 border">
                     <div class="col-12 p-0 m-0 text-danger">Comercializador por anunciante</div>
-                    <div class="col-7 m-0 p-0 me-2" style="height:40vh;">
+                    <div class="col-7 m-0 p-0 me-2" style="height:50vh;">
                         <table id="tableComercializador" class="datatable3 table table-striped w-100" style="font-size: 12px;">
                             <thead>
                                 <tr>

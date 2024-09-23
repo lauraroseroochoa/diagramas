@@ -1,24 +1,24 @@
 <div class="row p-0 m-0" style="height: 69vh; max-height: 69vh; overflow:hidden; border:0px solid red;">
     <div class="col-9 m-0 p-0 me-3 ">
         <div class="row p-0 m-0">
-            <div class="col-12 p-0 m-0  text-danger ">ranking Clientes</div>
+            <div class="col-12 p-0 m-0  text-danger ">Ranking Productos</div>
             <div class="col-12 m-0 p-0 me-2" style="height:80vh;">
                 <table class="datatable2 table table-striped w-100" style="font-size: 12px;">
                     <thead>
                         <tr>
-                            <th>Nombre del Cliente</th>
+                            <th>Nombre del producto</th>
                             <th>Total Tradicional</th>
                             <th>Total LED</th>
                             <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($rankingClientes as $cliente)
+                        @foreach ($ranking as $Producto)
                             <tr>
-                                <td>{{ $cliente['nombre'] }}</td>
-                                <td>{{ $cliente['totalTradicional'] }}</td>
-                                <td>{{ $cliente['totalLed'] }}</td>
-                                <td>{{ $cliente['total'] }}</td>
+                                <td>{{ $Producto['nombre_producto'] }}</td>
+                                <td>{{ $Producto['tradicional'] }}</td>
+                                <td>{{ $Producto['led'] }}</td>
+                                <td>{{ $Producto['total'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -39,16 +39,18 @@
     var table2 = setupDataTable('datatable2');
 
     function setupDataTable(selector) {
-    var table = $('.' + selector).DataTable({
-        paging: false,
-        order: [[3, 'desc']], // Ordenar por la columna de "Total"
-        dom: 'Brtp <"actions">',
-        orderCellsTop: true,
-        fixedHeader: true,
-        scrollX: true,
-        scrollY: "45vh",
-        scrollCollapse: true,
-        footerCallback: function (row, data, start, end, display) {
+        var table = $('.' + selector).DataTable({
+            paging: false,
+            order: [
+                [3, 'desc']
+            ],
+            dom: 'Brtp <"actions">',
+            orderCellsTop: true,
+            fixedHeader: true,
+            scrollX: true,
+            scrollY: "45vh",
+            scrollCollapse: true,
+            footerCallback: function (row, data, start, end, display) {
             var api = this.api();
 
             // Convierte los valores a enteros y realiza la suma
@@ -77,17 +79,16 @@
     return table;
 }
 
-function addSearchInput(table, selector) {
-    $(selector + ' thead tr:eq(0) th').each(function(i) {
-        $(this).append(
-            '<input type="text" placeholder="Buscar: " style="width:100%; font-size:11px; line-height:15px; border:none; border:1px solid #f2f2f2;" />'
-        );
-        $('input', this).on('keyup change', function() {
-            if (table.column(i).search() !== this.value) {
-                table.column(i).search(this.value).draw();
-            }
+    function addSearchInput(table, selector) {
+        $(selector + ' thead tr:eq(0) th').each(function(i) {
+            $(this).append(
+                '<input type="text" placeholder="Buscar: " style="width:100%; font-size:11px; line-height:15px; border:none; border:1px solid #f2f2f2;" />'
+                );
+            $('input', this).on('keyup change', function() {
+                if (table.column(i).search() !== this.value) {
+                    table.column(i).search(this.value).draw();
+                }
+            });
         });
-    });
-}
-
+    }
 </script>

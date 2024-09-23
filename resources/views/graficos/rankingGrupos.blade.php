@@ -1,24 +1,24 @@
 <div class="row p-0 m-0" style="height: 69vh; max-height: 69vh; overflow:hidden; border:0px solid red;">
     <div class="col-9 m-0 p-0 me-3 ">
         <div class="row p-0 m-0">
-            <div class="col-12 p-0 m-0  text-danger ">ranking Clientes</div>
+            <div class="col-12 p-0 m-0  text-danger ">Ranking Grupos</div>
             <div class="col-12 m-0 p-0 me-2" style="height:80vh;">
                 <table class="datatable2 table table-striped w-100" style="font-size: 12px;">
                     <thead>
                         <tr>
-                            <th>Nombre del Cliente</th>
+                            <th>Nombre del Grupo</th>
                             <th>Total Tradicional</th>
                             <th>Total LED</th>
                             <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($rankingClientes as $cliente)
+                        @foreach ($ranking as $Grupos)
                             <tr>
-                                <td>{{ $cliente['nombre'] }}</td>
-                                <td>{{ $cliente['totalTradicional'] }}</td>
-                                <td>{{ $cliente['totalLed'] }}</td>
-                                <td>{{ $cliente['total'] }}</td>
+                                <td>{{ $Grupos['nombre'] }}</td>
+                                <td>{{ $Grupos['tradicional'] }}</td>
+                                <td>{{ $Grupos['led'] }}</td>
+                                <td>{{ $Grupos['total'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -38,7 +38,7 @@
 <script type="text/javascript">
     var table2 = setupDataTable('datatable2');
 
-    function setupDataTable(selector) {
+function setupDataTable(selector) {
     var table = $('.' + selector).DataTable({
         paging: false,
         order: [[3, 'desc']], // Ordenar por la columna de "Total"

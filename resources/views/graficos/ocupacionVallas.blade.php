@@ -51,16 +51,15 @@ var chart = new Highcharts.Chart({
     series: [{
         data: [
             @foreach($datos2 as $key => $value)
-                ['{{$empresas[$key]->descripcion}}', {{ number_format(($value['ventas']*100/($value['total']*6)), 2) }}],
-            @endforeach
+            ['{{$empresas[$key]->descripcion}}',  {{ number_format($value['porcentaje'], 2) }}],
+        @endforeach
         ],
         colorByPoint: true,
         colors: [
             @foreach($datos2 as $key => $value)
-                '#{{ ($empresas[$key]->color==''?'ddd':$empresas[$key]->color) }}',
+                '#{{ ($empresas[$key]->color == '' ? 'ddd' : $empresas[$key]->color) }}',
             @endforeach
         ]
     }]
 });
-
 </script>
