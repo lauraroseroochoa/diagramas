@@ -128,7 +128,7 @@ class EstudioCompetencia3Controller extends Controller
             $lugaresXanunciante[$value->anunciantes_id][$value->lugares_id]['direccion'] = $value->direccion;
             $lugaresXanunciante[$value->anunciantes_id][$value->lugares_id]['coordenadas'] = $value->coordenadas;
         }
-        // dd($comercializadoresXanunciante);
+         //dd($comercializadoresXanunciante);
         // dd($productosXanunciante);
         // dd($lugaresXanunciante);
         return view('estudio-competencia.graficos.anunciantes', compact('anunciantes', 'datos2', 'productosXanunciante', 'comercializadoresXanunciante','lugaresXanunciante'));
@@ -304,6 +304,7 @@ class EstudioCompetencia3Controller extends Controller
         $data2 = DB::connection('mysql2')->table('datos')
             ->select(
                 'datos.lugares_id',
+                'datos.tipopautas_id',
                 DB::raw("
                     GROUP_CONCAT(DISTINCT
                         CASE 
@@ -335,7 +336,7 @@ class EstudioCompetencia3Controller extends Controller
             }    
         }
 
-        $data2->where('datos.tipopautas_id', '=', 1);
+        //$data2->where('datos.tipopautas_id', '=', 1);
         /*
         if($uso==1){
             $data2->where('datos.tipopautas_id', '=', 1);
@@ -392,14 +393,37 @@ class EstudioCompetencia3Controller extends Controller
 
         switch ($unidad) {
             case 1: //vallas
+
+
+                $data = DB::connection('mysql2')->table('lugares')
+                    ->select('id','propietarios_id','tipovalla_id')
+                    ->where('tipolugares_id', $unidad)
+                    ->whereDate('created_at', '<=', $ultimoDiaMes)
+                    ->where(function($query) use($ultimoDiaMes) {
+                        $query->where('fecha_desactivacion','>=',$ultimoDiaMes)
+                            ->orWhereNull('fecha_desactivacion');
+                    });
+                if($empresa!=0 && $unidad == 1){
+                    $data->where('propietarios_id',$empresa);
+                }
+                /*
+                if($uso!=0){
+                    $data->where('usos_id',$uso);
+                }*/
+                $data->where('usos_id',1);
+                $data = $data->get();
+
+                $dataLugares = $data->pluck('id');
+
                 
                 $data2 = DB::connection('mysql2')->table('datos')
                     ->select(
                         'datos.lugares_id',
+                        'datos.tipopautas_id',
                         DB::raw("
                             GROUP_CONCAT(DISTINCT
-                                CASE 
-                                    WHEN {$unidad} = 1 THEN lugares.propietarios_id 
+                                CASE
+                                    WHEN {$unidad} = 1 THEN lugares.propietarios_id
                                     ELSE datos.comercializador
                                 END
                                 SEPARATOR ','
@@ -413,21 +437,23 @@ class EstudioCompetencia3Controller extends Controller
                         "),
                         'datos.comercializador',
                         'datos.pantallaNumero',
-                        'datos.tipopublicidades_id'
+                        'datos.tipopublicidades_id',
                     )
-                    ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
-                    ->whereIn('datos.tipopublicidades_id', array_merge($tipoPublicidadesTradicionalId, $tipoPublicidadesLedId))
+                    ->where('datos.tipopautas_id', '=', 1)
+                    ->whereIn('datos.lugares_id', $dataLugares)
                     ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
-                    ->whereDate('datos.created_at', '>=', $primerDiaMes);
+                    ->whereDate('datos.created_at', '>=', $primerDiaMes)
+                    ->leftJoin('lugares','lugares.id','=','datos.lugares_id');
+                //filtro solo comercial porque es para ocupacion
+                //$data2->where('datos.tipopautas_id', '=', 1);
                 if($empresa!=0){
                     if ($unidad == 1) {
-                        $data2->where('lugares.propietarios_id', $empresa);    
+                        $data2->where('lugares.propietarios_id', $empresa);
                     } else {
                         $data2->where('datos.comercializador', $empresa);
-                    }    
+                    }
                 }
 
-                $data2->where('datos.tipopautas_id', '=', 1);
                 /*
                 if($uso==1){
                     $data2->where('datos.tipopautas_id', '=', 1);
@@ -436,67 +462,149 @@ class EstudioCompetencia3Controller extends Controller
                     $data2->where('datos.tipopautas_id', '!=', 1);
                 }
                 */
-
                 $data2->groupBy('lugares_id','pantallaNumero','tipopublicidades_id');
-                $datos = $data2->get();
+                $data2 = $data2->get()->keyBy('lugares_id');
+
 
 
                 // Procesamiento de datos
-                $datos2 = [];
-                foreach ($datos as $value) {
-                    $comercializadorId = $value->comercializadorId;
-                    $comercializadorIdsArray = explode(',', $comercializadorId);
+                $ocupacionLed = [];
+                $ocupacionTradicional = [];
+                $ocupacionGeneral = [];
+                foreach ($data as $value)
+                {
+                    $lugareId = $value->id;
 
-                    if (count($comercializadorIdsArray) > 1) {
-                        $comercializadorId = $value->comercializador;
+                    if(isset($data2[$lugareId]) && in_array($data2[$lugareId]->tipopublicidades_id,$tipoPublicidadesLedId)){
+                        if (!isset($ocupacionLed[$value->propietarios_id])) {
+                            $ocupacionLed[$value->propietarios_id] = [
+                                'total' => 0,
+                                'ventas' => 0
+                            ];
+                        }
+                        $ocupacionLed[$value->propietarios_id]['total'] += 5;
+                    }else if(in_array($value->tipovalla_id,$tipoPublicidadesLedId)){
+                        if (!isset($ocupacionLed[$value->propietarios_id])) {
+                            $ocupacionLed[$value->propietarios_id] = [
+                                'total' => 0,
+                                'ventas' => 0
+                            ];
+                        }
+                        $ocupacionLed[$value->propietarios_id]['total']+=5;
                     }
 
-                    if (!isset($datos2[$comercializadorId])) {
-                        $datos2[$comercializadorId] = [
+                    if(isset($data2[$lugareId]) && in_array($data2[$lugareId]->tipopublicidades_id,$tipoPublicidadesTradicionalId)){
+                        if (!isset($ocupacionTradicional[$value->propietarios_id])) {
+                            $ocupacionTradicional[$value->propietarios_id] = [
+                                'total' => 0,
+                                'ventas' => 0
+                            ];
+                        }
+                        $ocupacionTradicional[$value->propietarios_id]['total']++;
+                    }else if(in_array($value->tipovalla_id,$tipoPublicidadesTradicionalId)){
+                        if (!isset($ocupacionTradicional[$value->propietarios_id])) {
+                            $ocupacionTradicional[$value->propietarios_id] = [
+                                'total' => 0,
+                                'ventas' => 0
+                            ];
+                        }
+                        $ocupacionTradicional[$value->propietarios_id]['total']++;
+                    }
+
+                    if (!isset($ocupacionGeneral[$value->propietarios_id])) {
+                        $ocupacionGeneral[$value->propietarios_id] = [
                             'total' => 0,
                             'ventas' => 0
                         ];
                     }
-
-                    // $datos2[$comercializadorId]['total']++;
-
-                    if (in_array($value->tipopublicidades_id, $tipoPublicidadesTradicionalId)) {
-                        $datos2[$comercializadorId]['total']++; 
-                    } elseif (in_array($value->tipopublicidades_id, $tipoPublicidadesLedId)) {
-                        $datos2[$comercializadorId]['total'] += 6; 
+                    if(isset($data2[$lugareId])){
+                        if(in_array($data2[$lugareId]->tipopublicidades_id,$tipoPublicidadesLedId)){
+                            $ocupacionGeneral[$value->propietarios_id]['total'] += 5;
+                        }else{
+                            $ocupacionGeneral[$value->propietarios_id]['total']++;
+                        }
+                    }else{
+                        if(in_array($value->tipovalla_id,$tipoPublicidadesLedId)){
+                            $ocupacionGeneral[$value->propietarios_id]['total'] += 5;
+                        }else{
+                            $ocupacionGeneral[$value->propietarios_id]['total']++;
+                        }
                     }
-                    
-                    $producto2Array = explode(",", $value->producto2);
 
-                    foreach ($producto2Array as $producto2Id) {
 
-                            if (!isset($datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
-                                $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero] = [];
+
+                    if(isset($data2[$lugareId]))
+                    {
+                        $comercializadorId = $data2[$lugareId]->comercializadorId;
+                        $comercializadorIdsArray = explode(',', $comercializadorId);
+                        if (count($comercializadorIdsArray) > 1) {
+                            $comercializadorId = $data2[$lugareId]->comercializador;
+                        }
+
+                        $producto2Array = explode(",", $data2[$lugareId]->producto2);
+
+                        foreach ($producto2Array as $producto2Id) {
+
+
+                            if(in_array($data2[$lugareId]->tipopublicidades_id,$tipoPublicidadesLedId)){
+                                if (!isset($ocupacionLed[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero])) {
+                                    $ocupacionLed[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero] = [];
+                                }
+                                if (!in_array($anunciantesProductos[$producto2Id], $ocupacionLed[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero])) {
+                                    $ocupacionLed[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero][] = $anunciantesProductos[$producto2Id];
+                                    $ocupacionLed[$comercializadorId]['ventas']++;
+                                }
                             }
-                            
-                            if (!in_array($anunciantesProductos[$producto2Id], $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
-                                $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero][] = $anunciantesProductos[$producto2Id];
-                                $datos2[$comercializadorId]['ventas']++;
+
+
+                            if(in_array($data2[$lugareId]->tipopublicidades_id,$tipoPublicidadesTradicionalId)){
+                                if (!isset($ocupacionTradicional[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero])) {
+                                    $ocupacionTradicional[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero] = [];
+                                }
+                                if (!in_array($anunciantesProductos[$producto2Id], $ocupacionTradicional[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero])) {
+                                    $ocupacionTradicional[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero][] = $anunciantesProductos[$producto2Id];
+                                    $ocupacionTradicional[$comercializadorId]['ventas']++;
+                                }
                             }
+
+                            if (!isset($ocupacionGeneral[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero])) {
+                                $ocupacionGeneral[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero] = [];
+                            }
+                            if (!in_array($anunciantesProductos[$producto2Id], $ocupacionGeneral[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero])) {
+                                $ocupacionGeneral[$comercializadorId][$data2[$lugareId]->lugares_id][$data2[$lugareId]->pantallaNumero][] = $anunciantesProductos[$producto2Id];
+
+
+                                $ocupacionGeneral[$comercializadorId]['ventas']++;
+                            }
+
+                        }
+
 
                     }
                 }
 
-                // $datos2 = collect($datos2)->sortByDesc(function($item) {
-                //     return ($item['ventas'] * 100 / ($item['total'] * 6));
-                // })->all();
+                $ocupacionLed = collect($ocupacionLed)->sortByDesc(function($item) {
+                     return ($item['ventas'] * 100 / ($item['total']));
+                })->all();
+
+                $ocupacionTradicional = collect($ocupacionTradicional)->sortByDesc(function($item) {
+                     return ($item['ventas'] * 100 / ($item['total']));
+                })->all();
+
+                $ocupacionGeneral = collect($ocupacionGeneral)->sortByDesc(function($item) {
+                     return ($item['ventas'] * 100 / ($item['total']));
+                })->all();
+
+
+
+
                 // $datos2 = collect($datos2)->sortByDesc(function($item) {
                 //     return ($item['ventas'] * 100 /($item['total'])); 
                 // })->all();
 
-                $datos2 = collect($datos2)->map(function($item) {
-                    $item['porcentaje'] = ($item['ventas'] * 100 / ($item['total']));
-                    return $item;
-                })->sortByDesc('porcentaje')->all();
-                
-                $aplicarMultiplicacion = ($unidad != 1);
 
-                return view('estudio-competencia.graficos.ocupacionOtros', compact('empresas', 'datos2', 'aplicarMultiplicacion'));
+dd($ocupacionTradicional);
+                return view('estudio-competencia.graficos.ocupacionVallas', compact('empresas', 'ocupacionLed', 'ocupacionTradicional','ocupacionGeneral'));
             break;
 
             default:
