@@ -1,4 +1,6 @@
-<div class="col border ms-2  " style="height:65vh;">
+<div class="col  ms-2  " style="height:65vh;">
+    
+<h5 class="text-dos pt-2" >Participación por empresa con respecto a toda la pauta $comercial vendida</h5>
 <div id="participacion" style="width: 100%; height: 60vh;">
     
 </div>
@@ -31,7 +33,7 @@ var chart = new Highcharts.Chart({
         pointFormat: 'Pantallas: {point.y}'
     },
     title: {
-        text: 'Participación por empresa propietaria de pantallas LED con respecto a toda la pauta comercial vendida',
+        text: '',
         align: 'left'
     },
     legend: {
@@ -48,15 +50,17 @@ var chart = new Highcharts.Chart({
     series: [{
         data: [
                 @foreach($datos2 as $key => $value)
-                ['{{$empresas[$key]->descripcion}}', {{ number_format(($value['ventas']*100/($totalPautaComercial)), 2) }}],
-                @endforeach
+                
+                    {
+                        name: '{{$empresas[$key]->descripcion}}',
+                        y: {{ number_format(($value['ventas'] * 100 / ($totalPautaComercial)), 2) }},
+                        @if($empresas[$key]->descripcion == 'Marketmedios') color: '#FF0000' @endif
+                    },
+                
+            @endforeach
             ],
         colorByPoint: true,
-        colors: [
-                @foreach($datos2 as $key => $value)
-                '#{{$empresas[$key]->color}}',
-                @endforeach
-            ] 
+        colors: ['#c0c0c0', '#4B9EBF', '#71c5d9'],
     }]
 });
 </script>

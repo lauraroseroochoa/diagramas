@@ -2,7 +2,7 @@
     <div class="col-9 m-0 p-0 me-3 ">
         <div class="row p-0 m-0">
             <div class="col-4 m-0 p-0 me-3 ">
-                listado clientes
+                <div  class="text-dos mt-1" style="margin-bottom: -24px;">Listado clientes</div>
                 <table id="listadoClientes" class="datatable5 table table-striped w-100" style="font-size: 12px;">
                     <thead>
                         <tr>
@@ -13,13 +13,15 @@
                     </thead>
                     <tbody>
                         @foreach($clientes as $key => $value)
+                            @if($key>=0)
                             <tr>
-                                <td style="width:50%;">{{ ucfirst(strtolower($value))}}</td>
+                                <td style="width:50%;">{{ (strtoupper($value))}}</td>
                                 <td>{!!  implode('<br>',array_keys($comercializadorXcliente[$key])) !!}</td>
                                 <td style="width:10%;">
                                     <i class="fa-solid fa-eye" style="font-size:14px;" onclick="cargarInformacion({{$key}})"></i>
                                 </td>
                             </tr>
+                            @endif
                         @endforeach
                     </tbody>
                     <tfoot>
@@ -32,10 +34,11 @@
                 </table>
             </div>
             <div class="col m-0 p-0 ">
+                <div  class="text-dos mt-1 pl-4" id="tituloCliente" >&nbsp;</div>
                 <div class="row p-0 m-0">
                     <div class="col-12 m-0 p-0 ">
-                        <div class="row p-0 m-0 ps-2 border">
-                            <div class="col-12 p-0 m-0 text-danger ">Anunciantes por cliente</div>
+                        <div class="row p-0 m-0 ps-2 border bg-white">
+                            <div  class="text-dos mt-1"  style="margin-bottom: -24px;">Anunciantes por cliente</div>
                             <div class="col-7 m-0 p-0 me-2" style="height:30vh;">
                                 <table id="tableAnunciantes" class="datatable2 table table-striped w-100" style="font-size: 12px;">
                                     <thead>
@@ -60,8 +63,8 @@
                         </div>
                     </div>
                     <div class="col-6 m-0 p-0">
-                        <div class="row p-0 m-0 ps-2 border">
-                            <div class="col-12 p-0 m-0 text-danger">Productos por cliente</div>
+                        <div class="row p-0 m-0 ps-2 border bg-white">
+                            <div  class="text-dos mt-1"  style="margin-bottom: -24px;">Productos por cliente</div>
                             <div class="col-7 m-0 p-0 me-2" style="height:30vh;">
                                 <table id="tableProductos" class="datatable3 table table-striped w-100" style="font-size: 12px;">
                                     <thead>
@@ -86,8 +89,8 @@
                         </div>
                     </div>
                     <div class="col-6 m-0 p-0">
-                        <div class="row p-0 m-0 ps-2 border">
-                            <div class="col-12 p-0 m-0 text-danger">Comercializadores por cliente</div>
+                        <div class="row p-0 m-0 ps-2 border bg-white">
+                            <div  class="text-dos mt-1"  style="margin-bottom: -24px;">Comercializador por cliente</div>
                             <div class="col-7 m-0 p-0 me-2" style="height:30vh;">
                                 <table id="tableComercializadores" class="datatable4 table table-striped w-100" style="font-size: 12px;">
                                     <thead>
@@ -119,12 +122,12 @@
 </div>
 <script type="text/javascript">
 
-    var table2 = setupDataTable('datatable2','20vh');
-    var table3 = setupDataTable('datatable3','20vh');
-    var table4 = setupDataTable('datatable4','20vh');
-    var table5 = setupDataTable('datatable5','69vh');
+    var table2 = setupDataTable('datatable2','20vh',0);
+    var table3 = setupDataTable('datatable3','20vh',0);
+    var table4 = setupDataTable('datatable4','20vh',0);
+    var table5 = setupDataTable('datatable5','60vh',1);
 
-    function setupDataTable(selector,tamano) {
+    function setupDataTable(selector,tamano,exportar) {
         var table = $('.'+selector).DataTable({
             paging: false,
             order: [[1, 'desc']],
@@ -142,9 +145,12 @@
                     }, 0);
                     // Muestra los totales en el pie de página
                     $(api.column(1).footer()).html(total);
-                }
+                },
+            buttons: [
+                'excel'
+            ],
         });
-        table.buttons().remove();
+
         addSearchInput(table, selector);
         return table;
     }
@@ -190,17 +196,21 @@
 
                 L.marker([lat, lng], {icon: redIcon})
                     .addTo(map)
-                    .bindPopup("Empresa: " + data[key]['direccion'] + "<br>");
+                    .bindPopup("Empresa:  " + data[key]['empresa'] + " <br>Direccion:"  + data[key]['direccion'] + "<br>");
             }
         }
     }
 
+    var clientes = <?php echo json_encode($clientes); ?>;
+
     function cargarInformacion(cliente){
-        var clientes = <?php echo json_encode($clientes); ?>;
+
         var anunciantesXcliente = <?php echo json_encode($anunciantesXcliente); ?>;
         var productosXcliente = <?php echo json_encode($productoXcliente); ?>;
         var comercializadoresXcliente = <?php echo json_encode($comercializadorXcliente); ?>;
         var lugaresXcliente = <?php echo json_encode($lugaresXcliente); ?>;
+
+         $('#tituloCliente').html('<span class="text-secondary">Cliente seleccionado: </span><b>'+clientes[cliente]+'</b>');
 
         clearTableAndGraph('#tableAnunciantes', '#graficoAnunciantes', anunciantesXcliente[cliente]);
         clearTableAndGraph('#tableProductos', '#graficoProductos', productosXcliente[cliente]);
@@ -208,6 +218,15 @@
         console.log(lugaresXcliente);
         resetMap(lugaresXcliente[cliente]);
     };
+
+    $(document).ready(function(){
+    @if(isset($_GET['id']))
+        id = {{$_GET['id']}};
+        $('.datatable5 thead tr th:first input').val(clientes[id]);
+        $('#listadoClientes').DataTable().column(0).search(clientes[id]).draw();
+        cargarInformacion(id);
+    @endif
+    });
 
     function clearTableAndGraph(tableSelector, chartSelector, data) {
         var table = $(tableSelector).DataTable();
