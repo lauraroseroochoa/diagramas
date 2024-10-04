@@ -10,10 +10,14 @@
     <tbody>
         @foreach ($resultado as $key => $value)
             <tr>
-                <td>{{ $propietarios[$key]->descripcion }}</td>
-                <td>{{ isset($value['reporte'])?$value['reporte']:0 }}</td>
+                @if (array_key_exists($key, $propietarios))
+                    <td>{{ $propietarios[$key]->descripcion }}</td>
+                @else
+                    <td>{{ $key }}</td> 
+                @endif
+                <td>{{ isset($value['reporte']) ? $value['reporte'] : 0 }}</td>
                 <td>{{ $value['inventario'] }}</td>
-                <td>{{ isset($value['ubicaciones'])?implode(', ',$value['ubicaciones']):'' }}</td>
+                <td>{{ isset($value['ubicaciones']) ? implode(', ', $value['ubicaciones']) : '' }}</td>
             </tr>
         @endforeach
     </tbody>

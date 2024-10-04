@@ -62,13 +62,7 @@ var chart = new Highcharts.Chart({
     series: [{
         data: [
             @foreach($datos2 as $key => $value)
-                ['{{$empresas[$key]->descripcion}}', 
-                @if($aplicarMultiplicacion)
-                    {{ number_format(($value['ventas']*100/($value['total']*6)), 2) }}
-                @else
-                    {{ number_format($value['porcentaje'], 2) }},
-                @endif
-                ],
+                ['{{$empresas[$key]->descripcion}}', {{ number_format(($value['ventas']*100/($value['total']*6)), 2) }}],
             @endforeach
         ],
         colorByPoint: true,

@@ -194,7 +194,7 @@
                 var lat = coordenadas[0].trim();
                 var lng = coordenadas[1].trim();
 
-                L.marker([lat, lng], {icon: redIcon})
+                L.marker([lat, lng])
                     .addTo(map)
                     .bindPopup("Empresa:  " + data[key]['empresa'] + " <br>Direccion:"  + data[key]['direccion'] + "<br>");
             }

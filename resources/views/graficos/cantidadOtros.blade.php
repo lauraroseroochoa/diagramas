@@ -126,15 +126,16 @@ $(document).ready(function(){
 
     
 	var mapOption = {center: [4.682523136221837, -74.1092804182811], zoom: 12, zoomControl:true}
-	var map = new L.map('openMap', mapOption);
-	map.touchZoom.disable();
+    globalThis.map = new L.map('openMap', mapOption);
+    map.touchZoom.disable();
     map.doubleClickZoom.disable();
     map.boxZoom.disable();
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    var layer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         subdomains: 'abcd',
         maxZoom: 19,
         minZoom: 10
-    }).addTo(map);
+    });
+    map.addLayer(layer);
 
     var redIcon = L.icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -158,7 +159,7 @@ $(document).ready(function(){
                 
 		    @endphp
 		        // Añadir el marcador al mapa
-		        L.marker([{{ $lat }}, {{ $lng }}], {icon: redIcon})
+		        L.marker([{{ $lat }}, {{ $lng }}])
 		            .addTo(map)
 		            .bindPopup(" {{ $lugares[$value['lugares_id']]->direccion  }} <br>");
 		
