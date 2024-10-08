@@ -1,18 +1,34 @@
 
+<div class="row m-0 p-0">
 
-@foreach($datos2 as $key => $value)
+    <div class="col p-0 m-0 ">
+        <h5 class="text-dos pt-2" style="margin-bottom: 0px;">Empresas por cupos vendidos</h5>
+        <table id="cantidad" class="datatable1 table table-striped tableFont w-100 p-0 m-0 bg-white ">
+            <thead>
+                <tr>
+                    <th class="border">Empresa</th>
+                    <th class="border">Cupos vendidos</th>
+                    <th class="border">Total cupos LED</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($datos2 as $key => $value)
+                    <tr>
+                        <td>{{$empresas[$key]->descripcion}}</td>
+                        <td>{{ $value['ventas'] }}</td>
+                        <td>{{ $value['total']*6 }}</td>
+                    </tr>
+                @endforeach
 
-    @if($key==2)
-        {{ $value['ventas'] }}
-        {{ $value['total'] }}
-    @endif
-@endforeach
+            </tbody>
 
+        </table>
+    </div>
+    <div class="col-8 border ms-2  " style="height:65vh;">
+    <div id="ocupacion" style="width: 100%; height: 60vh;">
 
-<div class="col border ms-2  " style="height:65vh;">
-<div id="ocupacion" style="width: 100%; height: 60vh;">
-    
-</div>
+    </div>
+    </div>
 </div>
 <script type="text/javascript">
 var chart = new Highcharts.Chart({

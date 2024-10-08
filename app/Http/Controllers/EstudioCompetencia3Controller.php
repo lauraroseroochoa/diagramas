@@ -64,8 +64,13 @@ class EstudioCompetencia3Controller extends Controller
             $data2->where('datos.tipopautas_id', '=', 1);
         }
         if ($uso == 2) {
-            $data2->where('datos.tipopautas_id', '!=', 1);
+            $data2->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
         }
+        if ($uso == 7) {
+            $data2->where('datos.tipopautas_id', '=', 7);
+        }
+        
         $datos2 = $data2->get();
         $anunciantes = $datos2->unique('anunciante')
             ->pluck('anunciante', 'anunciantes_id')
@@ -187,9 +192,13 @@ class EstudioCompetencia3Controller extends Controller
             $data->where('datos.tipopautas_id', '=', 1);
         }
         if ($uso == 2) {
-            $data->where('datos.tipopautas_id', '!=', 1);
+            $data->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
         }
-
+        if ($uso == 7) {
+            $data->where('datos.tipopautas_id', '=', 7);
+        }
+        
         $datos = $data->get();
         $clientes = $datos->unique('cliente')
             ->pluck('cliente', 'cliente_id')
@@ -370,7 +379,7 @@ class EstudioCompetencia3Controller extends Controller
                     ->select(
                         'datos.lugares_id',
                         DB::raw("
-                            GROUP_CONCAT(DISTINCT datos.comercializador SEPARATOR ',') as comercializadorId
+                            GROUP_CONCAT(DISTINCT datos.comercializador2_id SEPARATOR ',') as comercializadorId
                         "),
                         'datos.pantallaNumero',
                     )
@@ -386,7 +395,7 @@ class EstudioCompetencia3Controller extends Controller
                     ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
                     ->whereDate('datos.created_at', '>=', $primerDiaMes);
                 if ($empresa != 0) {
-                    $data3->where('datos.comercializador', $empresa);
+                    $data3->where('datos.comercializador2_id', $empresa);
                 }
                 $data3->groupBy('lugares_id', 'pantallaNumero');
                 $data3 = $data3->get();
@@ -555,8 +564,12 @@ class EstudioCompetencia3Controller extends Controller
                         return $query->where('tipopautas_id', 1);
                     })
                     ->when($uso == 2, function ($query) {
-                        return $query->where('tipopautas_id', '!=', 1);
+                        return $query->where('tipopautas_id', '!=', 1)
+                                     ->where('tipopautas_id', '!=', 7);
                     })
+                    ->when($uso == 7, function ($query) {
+                        return $query->where('tipopautas_id', 7);
+                    })                    
 
                     ->where('datos.created_at', '>=', $primerDiaMes)
                     ->where('datos.created_at', '<=', $ultimoDiaMes)
@@ -591,8 +604,12 @@ class EstudioCompetencia3Controller extends Controller
                         return $query->where('tipopautas_id', 1);
                     })
                     ->when($uso == 2, function ($query) {
-                        return $query->where('tipopautas_id', '!=', 1);
+                        return $query->where('tipopautas_id', '!=', 1)
+                                     ->where('tipopautas_id', '!=', 7);
                     })
+                    ->when($uso == 7, function ($query) {
+                        return $query->where('tipopautas_id', 7);
+                    })                    
                     ->where('created_at', '>=', $primerDiaMes)
                     ->where('created_at', '<=', $ultimoDiaMes)
                     ->when($empresa != 0, function ($query) use ($empresa) {
@@ -655,7 +672,11 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
+            })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
             })
             ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesId)
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
@@ -796,9 +817,12 @@ class EstudioCompetencia3Controller extends Controller
             $data2->where('datos.tipopautas_id', '=', 1);
         }
         if ($uso == 2) {
-            $data2->where('datos.tipopautas_id', '!=', 1);
+            $data2->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
         }
-
+        if ($uso == 7) {
+            $data2->where('datos.tipopautas_id', '=', 7);
+        }
         //$data2->groupBy('datos.lugares_id',DB::raw("CASE WHEN $unidad = 1 THEN lugares.propietarios_id ELSE datos.comercializador2_id END"),'datos.pantallaNumero');
 
         $datos = $data2->get();
@@ -971,8 +995,13 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })
+            
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes);
 
@@ -1017,7 +1046,18 @@ class EstudioCompetencia3Controller extends Controller
             ->select('anunciantes_productos.anunciante_id as anunciantes')
             ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
             ->join('anunciantes_productos', 'datos.producto2', '=', 'anunciantes_productos.id')
-            ->where('lugares.propietarios_id', 2)
+
+            ->when($unidad == 1, function ($query) {
+                return $query->where('lugares.propietarios_id', 2);
+            })
+            ->when($unidad == 2, function ($query) {
+                return $query->where('datos.comercializador2_id', 2);
+            })
+            ->when($unidad == 3, function ($query) {
+                return $query->where('datos.comercializador2_id', 2);
+            })
+
+
             ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesId)
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes)
@@ -1029,6 +1069,8 @@ class EstudioCompetencia3Controller extends Controller
             })
             ->groupBy('anunciantes_productos.anunciante_id')
             ->pluck('anunciantes_productos.anunciantes');
+
+
 
         $data2 =  DB::connection('mysql2')->table('datos')
             ->select(
@@ -1072,7 +1114,7 @@ class EstudioCompetencia3Controller extends Controller
             $data2->where('lugares.usos_id', $uso);
         }
 
-        $data2->groupBy('producto');
+        $data2->groupBy('anunciante');
         $datos = $data2->get();
 
         return view('estudio-competencia.graficos.nomarket', compact('datos', 'empresas', 'tipoPublicidades'));
@@ -1104,7 +1146,15 @@ class EstudioCompetencia3Controller extends Controller
         $data =  DB::connection('mysql2')->table('datos')
             ->select('datos.producto2')
             ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
-            ->where('lugares.propietarios_id', 2)
+            ->when($unidad == 1, function ($query) {
+                return $query->where('lugares.propietarios_id', 2);
+            })
+            ->when($unidad == 2, function ($query) {
+                return $query->where('datos.comercializador2_id', 2);
+            })
+            ->when($unidad == 3, function ($query) {
+                return $query->where('datos.comercializador2_id', 2);
+            })
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes)
             ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesId)
@@ -1288,7 +1338,7 @@ class EstudioCompetencia3Controller extends Controller
                     GROUP_CONCAT(DISTINCT
                         CASE
                             WHEN {$unidad} = 1 THEN lugares.propietarios_id
-                            ELSE datos.comercializador
+                            ELSE datos.comercializador2_id
                         END
                         SEPARATOR ','
                     ) as comercializadorId
@@ -1299,7 +1349,7 @@ class EstudioCompetencia3Controller extends Controller
                         SEPARATOR ','
                     ) as producto2
                 "),
-                'datos.comercializador',
+                'datos.comercializador2_id',
                 'datos.pantallaNumero'
             )
             ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
@@ -1311,7 +1361,7 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data2->where('lugares.propietarios_id', $empresa);
             } else {
-                $data2->where('datos.comercializador', $empresa);
+                $data2->where('datos.comercializador2_id', $empresa);
             }
         }
 
@@ -1336,7 +1386,7 @@ class EstudioCompetencia3Controller extends Controller
             $comercializadorIdsArray = explode(',', $comercializadorId);
 
             if (count($comercializadorIdsArray) > 1) {
-                $comercializadorId = $value->comercializador;
+                $comercializadorId = $value->comercializador2_id;
             }
 
             if (!isset($datos2[$comercializadorId])) {
@@ -1405,7 +1455,7 @@ class EstudioCompetencia3Controller extends Controller
                             GROUP_CONCAT(DISTINCT
                                 CASE
                                     WHEN {$unidad} = 1 THEN lugares.propietarios_id
-                                    ELSE datos.comercializador
+                                    ELSE datos.comercializador2_id
                                 END
                                 SEPARATOR ','
                             ) as comercializadorId
@@ -1416,7 +1466,7 @@ class EstudioCompetencia3Controller extends Controller
                                 SEPARATOR ','
                             ) as producto2
                         "),
-                        'datos.comercializador',
+                        'datos.comercializador2_id',
                         'datos.pantallaNumero',
                         'datos.tipopublicidades_id',
                     )
@@ -1431,7 +1481,7 @@ class EstudioCompetencia3Controller extends Controller
                     if ($unidad == 1) {
                         $data2->where('lugares.propietarios_id', $empresa);
                     } else {
-                        $data2->where('datos.comercializador', $empresa);
+                        $data2->where('datos.comercializador2_id', $empresa);
                     }
                 }
 
@@ -1516,7 +1566,7 @@ class EstudioCompetencia3Controller extends Controller
                         $comercializadorId = $data2[$lugareId]->comercializadorId;
                         $comercializadorIdsArray = explode(',', $comercializadorId);
                         if (count($comercializadorIdsArray) > 1) {
-                            $comercializadorId = $data2[$lugareId]->comercializador;
+                            $comercializadorId = $data2[$lugareId]->comercializador2_id;
                         }
 
                         $producto2Array = explode(",", $data2[$lugareId]->producto2);
@@ -1640,11 +1690,11 @@ class EstudioCompetencia3Controller extends Controller
                             "GROUP_CONCAT(DISTINCT
                             CASE
                                 WHEN {$unidad} = 1 THEN lugares.propietarios_id
-                                ELSE datos.comercializador
+                                ELSE datos.comercializador2_id
                             END SEPARATOR ',') as comercializadorId"
                         ),
                         DB::raw("GROUP_CONCAT(DISTINCT datos.producto2 SEPARATOR ',') as producto2"),
-                        'datos.comercializador',
+                        'datos.comercializador2_id',
                         'datos.pantallaNumero',
                         'datos.tipopublicidades_id',
                         'lugares.tipovalla_id'
@@ -1680,7 +1730,7 @@ class EstudioCompetencia3Controller extends Controller
                     $comercializadorIdsArray = explode(',', $comercializadorId);
 
                     if (count($comercializadorIdsArray) > 1) {
-                        $comercializadorId = $value->comercializador;
+                        $comercializadorId = $value->comercializador2_id;
                     }
 
                     if (!isset($datos2[$comercializadorId])) {
@@ -1734,7 +1784,7 @@ class EstudioCompetencia3Controller extends Controller
                             GROUP_CONCAT(DISTINCT
                                 CASE
                                     WHEN {$unidad} = 1 THEN lugares.propietarios_id
-                                    ELSE datos.comercializador
+                                    ELSE datos.comercializador2_id
                                 END
                                 SEPARATOR ','
                             ) as comercializadorId
@@ -1745,7 +1795,7 @@ class EstudioCompetencia3Controller extends Controller
                                 SEPARATOR ','
                             ) as producto2
                         "),
-                        'datos.comercializador',
+                        'datos.comercializador2_id',
                         'datos.pantallaNumero'
                     )
                     ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
@@ -1757,7 +1807,7 @@ class EstudioCompetencia3Controller extends Controller
                     if ($unidad == 1) {
                         $data2->where('lugares.propietarios_id', $empresa);
                     } else {
-                        $data2->where('datos.comercializador', $empresa);
+                        $data2->where('datos.comercializador2_id', $empresa);
                     }
                 }
 
@@ -1780,7 +1830,7 @@ class EstudioCompetencia3Controller extends Controller
                     $comercializadorIdsArray = explode(',', $comercializadorId);
 
                     if (count($comercializadorIdsArray) > 1) {
-                        $comercializadorId = $value->comercializador;
+                        $comercializadorId = $value->comercializador2_id;
                     }
 
                     if (!isset($datos2[$comercializadorId])) {
@@ -1873,7 +1923,7 @@ class EstudioCompetencia3Controller extends Controller
                     $comercializadorIdsArray = explode(',', $comercializadorId);
 
                     if (count($comercializadorIdsArray) > 1) {
-                        $comercializadorId = $value->comercializador;
+                        $comercializadorId = $value->comercializador2_id;
                     }
 
                     if (!isset($datos3[$comercializadorId])) {
@@ -1944,7 +1994,7 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data->where('lugares.propietarios_id', $empresa);
             } else {
-                $data->where('datos.comercializador', $empresa);
+                $data->where('datos.comercializador2_id', $empresa);
             }
         }
 
@@ -2013,7 +2063,7 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data2->where('lugares.propietarios_id', $empresa);
             } else {
-                $data2->where('datos.comercializador', $empresa);
+                $data2->where('datos.comercializador2_id', $empresa);
             }
         }
 
@@ -2088,7 +2138,7 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data->where('lugares.propietarios_id', $empresa);
             } else {
-                $data->where('datos.comercializador', $empresa);
+                $data->where('datos.comercializador2_id', $empresa);
             }
         }
 
@@ -2164,7 +2214,7 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data->where('lugares.propietarios_id', $empresa);
             } else {
-                $data->where('datos.comercializador', $empresa);
+                $data->where('datos.comercializador2_id', $empresa);
             }
         }
 
@@ -2238,7 +2288,7 @@ class EstudioCompetencia3Controller extends Controller
 
         // Cambiar la unión según la unidad
         if ($unidad == 3) {
-            $data->join('propietarios', 'propietarios.id', '=', 'datos.comercializador');
+            $data->join('propietarios', 'propietarios.id', '=', 'datos.comercializador2_id');
         } else {
             $data->join('propietarios', 'propietarios.id', '=', 'lugares.propietarios_id');
         }
@@ -2286,7 +2336,7 @@ class EstudioCompetencia3Controller extends Controller
                 if ($unidad == 1) {
                     return $query->where('lugares.propietarios_id', $empresa);
                 }
-                return $query->where('datos.comercializador', $empresa);
+                return $query->where('datos.comercializador2_id', $empresa);
             })
             ->when($uso == 1, function ($query) {
                 return $query->where('datos.tipopautas_id', '=', 1);
@@ -2472,7 +2522,7 @@ class EstudioCompetencia3Controller extends Controller
                 foreach ($lugares as $value) {
                     $comercializadorId = DB::connection('mysql2')->table('datos')
                         ->where('lugares_id', $value->id)
-                        ->value('comercializador');
+                        ->value('comercializador2_id');
 
                     if (!isset($resultado[$comercializadorId])) {
                         $resultado[$comercializadorId] = [

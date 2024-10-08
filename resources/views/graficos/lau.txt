@@ -51,7 +51,99 @@
 
 
 
+ $anunciantesProductos = DB::connection('mysql2')
+            ->table('anunciantes_productos')
+            ->pluck('anunciante_id','id')
+            ->all();
 
+        $data2 = DB::connection('mysql2')->table('datos')
+            ->select(
+                'datos.lugares_id',
+                'datos.tipopautas_id',
+                DB::raw("
+                    GROUP_CONCAT(DISTINCT
+                        CASE
+                            WHEN {$unidad} = 1 THEN lugares.propietarios_id
+                            ELSE datos.comercializador
+                        END
+                        SEPARATOR ','
+                    ) as comercializadorId
+                "),
+                DB::raw("
+                    GROUP_CONCAT(DISTINCT
+                        datos.producto2
+                        SEPARATOR ','
+                    ) as producto2
+                "),
+                'datos.comercializador',
+                'datos.pantallaNumero'
+            )
+            ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
+            ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesLedId)
+            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
+            ->whereDate('datos.created_at', '>=', $primerDiaMes);
+
+        if($empresa!=0){
+            if ($unidad == 1) {
+                $data2->where('lugares.propietarios_id', $empresa);
+            } else {
+                $data2->where('datos.comercializador', $empresa);
+            }
+        }
+
+        //$data2->where('datos.tipopautas_id', '=', 1);
+        /*
+        if($uso==1){
+            $data2->where('datos.tipopautas_id', '=', 1);
+        }
+        if($uso==2){
+            $data2->where('datos.tipopautas_id', '!=', 1);
+        }
+        */
+
+        $data2->groupBy('lugares_id','pantallaNumero');
+        $datos = $data2->get();
+
+
+
+        $datos2 = [];
+        foreach ($datos as $value) {
+            $comercializadorId = $value->comercializadorId;
+            $comercializadorIdsArray = explode(',', $comercializadorId);
+
+            if (count($comercializadorIdsArray) > 1) {
+                $comercializadorId = $value->comercializador;
+            }
+
+            if (!isset($datos2[$comercializadorId])) {
+                $datos2[$comercializadorId] = [
+                    'total' => 0,
+                    'ventas' => 0
+                ];
+            }
+
+            $datos2[$comercializadorId]['total']++;
+
+
+            $producto2Array = explode(",", $value->producto2);
+
+            foreach ($producto2Array as $producto2Id) {
+
+                    if (!isset($datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
+                        $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero] = [];
+
+                    }
+
+                    if (!in_array($anunciantesProductos[$producto2Id], $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero])) {
+                        $datos2[$comercializadorId][$value->lugares_id][$value->pantallaNumero][] = $anunciantesProductos[$producto2Id];
+                        $datos2[$comercializadorId]['ventas']++;
+                    }
+            }
+        }
+
+        $datos2 = collect($datos2)->sortByDesc(function($item) {
+            return ($item['ventas'] * 100 / ($item['total'] * 6));
+        })->all();
 
 
 
@@ -240,3 +332,156 @@
     }
           
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+vista 
+
+
+
+@foreach($datos2 as $key => $value)
+
+    @if($key==2)
+        {{ $value['ventas'] }}
+        {{ $value['total'] }}
+    @endif
+@endforeach
+
+
+<div class="col border ms-2  " style="height:65vh;">
+<div id="ocupacion" style="width: 100%; height: 60vh;">
+    
+</div>
+</div>
+<script type="text/javascript">
+var chart = new Highcharts.Chart({
+    chart: {
+        renderTo: 'ocupacion',
+        type: 'column',
+        options3d: {
+            enabled: true,
+            alpha: 0,
+            beta: 0,
+            depth: 28,
+            viewDistance: 25
+        }
+    },
+    xAxis: {
+        type: 'category'
+    },
+    yAxis: {
+        title: {
+            enabled: true,
+            text: 'Cantidad de pantallas'
+        },
+    },
+    tooltip: {
+        headerFormat: '<b>{point.key}</b><br>',
+        pointFormat: 'Pantallas: {point.y}'
+    },
+    title: {
+        text: 'Ocupación por empresa propietaria de pantallas LED con pauta comercial',
+        align: 'left'
+    },
+    legend: {
+        enabled: false
+    },
+    plotOptions: {
+        column: {
+            depth: 25,
+            dataLabels: {
+                enabled: true,
+                format: '{point.y} %' // Muestra el valor en la columna
+            }
+        }
+    },
+    credits: {
+       enabled: false
+    },
+    series: [{
+        data: [
+            @foreach($datos2 as $key => $value)
+                ['{{$empresas[$key]->descripcion}}', 
+                @if($aplicarMultiplicacion)
+                    {{ number_format(($value['ventas']*100/($value['total']*6)), 2) }}
+                @else
+                    {{ number_format($value['porcentaje'], 2) }},
+                @endif
+                ],
+            @endforeach
+        ],
+        colorByPoint: true,
+        colors: [
+            @foreach($datos2 as $key => $value)
+                '#{{ ($empresas[$key]->color == '' ? 'ddd' : $empresas[$key]->color) }}',
+            @endforeach
+        ]
+    }]
+});
+</script>
+
+
+
+
+
+public function rankingEmpresa($unidad, $periodo, $empresa, $uso)
+    {
+        list($mes, $anno) = explode("-", $periodo);
+        $mes = (int)$mes;
+        $anno = (int)$anno;
+        $ultimoDiaMes = Carbon::create($anno, $mes)->endOfMonth()->endOfDay();
+        $primerDiaMes = Carbon::create($anno, $mes)->startOfMonth();
+        $tipoPublicidades = DB::connection('mysql2')->table('tipopublicidades')->where('tipolugares_id', $unidad)->get();
+        $tipoPublicidades2 = $tipoPublicidades->pluck('id')->toArray();
+
+        $data = DB::connection('mysql2')->table('datos')
+            ->join('anunciantes_productos', 'datos.producto2', '=', 'anunciantes_productos.id')
+            ->join('lugares', 'lugares.id', '=', 'datos.lugares_id')
+            ->join('clientes', 'clientes.id', '=', 'datos.clientes_id');
+
+        if ($unidad == 3) {
+            $data->join('propietarios', 'propietarios.id', '=', 'datos.comercializador');
+        } else {
+            $data->join('propietarios', 'propietarios.id', '=', 'lugares.propietarios_id');
+        }
+
+        $data = $data->select(
+            'propietarios.descripcion as empresa',
+            'propietarios.id as empresa_id',
+            DB::raw('COUNT(DISTINCT datos.clientes_id) as clientes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN clientes.grupo_id = 2 THEN datos.clientes_id END) as clientes_directo'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 1 THEN datos.clientes_id END) as clientes_tradicional'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 2 THEN datos.clientes_id END) as clientes_led'),
+            DB::raw('COUNT(DISTINCT anunciantes_productos.anunciante_id) as anunciantes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 1 THEN anunciantes_productos.anunciante_id END) as anunciantes_tradicional'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 2 THEN anunciantes_productos.anunciante_id END) as anunciantes_led')
+        )
+            ->whereIn('datos.tipopublicidades_id', $tipoPublicidades2)
+            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
+            ->whereDate('datos.created_at', '>=', $primerDiaMes)
+            ->when($empresa != 0, function ($query) use ($empresa, $unidad) {
+                if ($unidad == 1) {
+                    return $query->where('lugares.propietarios_id', $empresa);
+                }
+                return $query->where('datos.comercializador', $empresa);
+            })
+            ->when($uso == 1, function ($query) {
+                return $query->where('datos.tipopautas_id', '=', 1);
+            })
+            ->when($uso == 2, function ($query) {
+                return $query->where('datos.tipopautas_id', '!=', 1);
+            })
+            ->groupBy('propietarios.id')
+            ->get();
+
+        return view('estudio-competencia.graficos.rankingEmpresa', compact('data'));
+    }

@@ -58,7 +58,17 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-
+    $('.datatable1 thead tr:eq(0) th').each( function (i) {
+        $(this).append( '<input type="text" placeholder="Buscar: " style="width:100%; display:block; font-size:11px; line-height:15px; margin:1px 0px 0px 0px; border:none; border:1px solid #f2f2f2;" />'  );
+        $( 'input', this ).on( 'keyup change', function () {
+          if ( table1.column(i).search() !== this.value ) {
+              table1
+                  .column(i)
+                  .search( this.value )
+                  .draw();
+          }
+        } );
+    });
     var table1 = $('.datatable1').DataTable({
         paging: false,
         order: [[0, 'asc']],

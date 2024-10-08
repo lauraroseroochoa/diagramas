@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-7" style="height: 65vh; max-height: 65vh;  ">
-        <div class="mt-3 " style="margin-bottom:-50px;"><h4 class="text-danger" >Cantidad elementos vendidos por {{ $descr }}</h4><small>*En las pantallas led se cuenta cada cupo como elemento teniendo en cuenta como valores unicos el anunciante</small></div>
+        <div class="mt-3 " style="margin-bottom:-20px;"><h4 class="text-danger" >Cantidad cupos vendidos por {{ $descr }}</h4></div>
 		<table id="cantidad" class="datatable1 table table-striped tableFont w-100 ">
 			<thead>
 				<tr>

@@ -1,5 +1,5 @@
 <div class="row mb-2 mt-0 pt-0" style=" ">
-    <div class="col-1 border ms-3 p-2 pt-0 d-flex flex-column" style="height: 25vh; max-height: 25vh;" >
+    <div class="col-1 border ms-3 p-2 pt-0 d-flex flex-column bg-white" style="height: 25vh; max-height: 25vh;" >
         <h1 class="text-uno flex-grow-1 d-flex align-items-center counter" style="font-size:65px;">{{ $totalLugares }}</h1>
         <div class="border-bottom border-uno border-3"> Total {{ $varTotalLugares }}</div>
     </div>
@@ -190,7 +190,11 @@
         },
         plotOptions: {
             column: {
-                depth: 25
+                depth: 25,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.y} %' // Muestra el valor en la columna
+                }
             }
         },
         credits: {
