@@ -47,8 +47,8 @@
             <thead>
                 <tr>
                     <th>Empresa</th>
-                    <th>Led</th>
                     <th>Tradicional</th>
+                    <th>Led</th>
                     <th>Clientes</th>
                     <th>Clientes directos</th>
                     <th style="width: 8%;">Ver</th>
@@ -106,6 +106,16 @@
             footerCallback: function (row, data, start, end, display) {
                 var api = this.api();
                 // Convierte los valores a enteros y realiza la suma
+                var total4 = api.column(1, { page: 'current' }).data().reduce(function (a, b) {
+                    return parseInt(a) + parseInt(b); // Convertir los valores a enteros antes de sumar
+                }, 0);
+                // Muestra los totales en el pie de página sin decimales
+                $(api.column(1).footer()).html(total4);
+                var total3 = api.column(2, { page: 'current' }).data().reduce(function (a, b) {
+                    return parseInt(a) + parseInt(b); // Convertir los valores a enteros antes de sumar
+                }, 0);
+                // Muestra los totales en el pie de página sin decimales
+                $(api.column(2).footer()).html(total3);
                 var total = api.column(3, { page: 'current' }).data().reduce(function (a, b) {
                     return parseInt(a) + parseInt(b); // Convertir los valores a enteros antes de sumar
                 }, 0);

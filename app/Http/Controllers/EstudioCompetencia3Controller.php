@@ -363,8 +363,12 @@ class EstudioCompetencia3Controller extends Controller
                         return $query->where('tipopautas_id', 1);
                     })
                     ->when($uso == 2, function ($query) {
-                        return $query->where('tipopautas_id', '!=', 1);
+                        return $query->where('tipopautas_id', '!=', 1)
+                                     ->where('tipopautas_id', '!=', 7);
                     })
+                    ->when($uso == 7, function ($query) {
+                        return $query->where('tipopautas_id', 7);
+                    })                    
                     ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesId)
                     ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
                     ->whereDate('datos.created_at', '>=', $primerDiaMes);
@@ -388,8 +392,12 @@ class EstudioCompetencia3Controller extends Controller
                         return $query->where('tipopautas_id', 1);
                     })
                     ->when($uso == 2, function ($query) {
-                        return $query->where('tipopautas_id', '!=', 1);
+                        return $query->where('tipopautas_id', '!=', 1)
+                                     ->where('tipopautas_id', '!=', 7);
                     })
+                    ->when($uso == 7, function ($query) {
+                        return $query->where('tipopautas_id', 7);
+                    })                    
 
                     ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesId)
                     ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
@@ -1065,8 +1073,12 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })            
             ->groupBy('anunciantes_productos.anunciante_id')
             ->pluck('anunciantes_productos.anunciantes');
 
@@ -1099,8 +1111,12 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })            
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes);
 
@@ -1162,8 +1178,12 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })            
             ->groupBy('datos.producto2')
             ->pluck('datos.producto2');
 
@@ -1195,8 +1215,12 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })            
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes);
 
@@ -1244,7 +1268,15 @@ class EstudioCompetencia3Controller extends Controller
             ->select('anunciantes_productos.anunciante_id as anunciantes')
             ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
             ->join('anunciantes_productos', 'datos.producto2', '=', 'anunciantes_productos.id')
-            ->where('lugares.propietarios_id', '!=', 2)
+            ->when($unidad == 1, function ($query) {
+                return $query->where('lugares.propietarios_id','!=', 2);
+            })
+            ->when($unidad == 2, function ($query) {
+                return $query->where('datos.comercializador2_id', '!=',2);
+            })
+            ->when($unidad == 3, function ($query) {
+                return $query->where('datos.comercializador2_id','!=', 2);
+            })
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes)
             ->whereIn('datos.tipopublicidades_id', $tipoPublicidadesId)
@@ -1252,8 +1284,12 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })            
             ->groupBy('anunciantes_productos.anunciante_id')
             ->pluck('anunciantes_productos.anunciantes');
 
@@ -1285,8 +1321,12 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('tipopautas_id', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('tipopautas_id', '!=', 1);
+                return $query->where('tipopautas_id', '!=', 1)
+                             ->where('tipopautas_id', '!=', 7);
             })
+            ->when($uso == 7, function ($query) {
+                return $query->where('tipopautas_id', 7);
+            })            
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes);
 
@@ -1338,7 +1378,7 @@ class EstudioCompetencia3Controller extends Controller
                     GROUP_CONCAT(DISTINCT
                         CASE
                             WHEN {$unidad} = 1 THEN lugares.propietarios_id
-                            ELSE datos.comercializador2_id
+                            ELSE datos.comercializador
                         END
                         SEPARATOR ','
                     ) as comercializadorId
@@ -1349,7 +1389,7 @@ class EstudioCompetencia3Controller extends Controller
                         SEPARATOR ','
                     ) as producto2
                 "),
-                'datos.comercializador2_id',
+                'datos.comercializador',
                 'datos.pantallaNumero'
             )
             ->join('lugares', 'datos.lugares_id', '=', 'lugares.id')
@@ -1361,7 +1401,7 @@ class EstudioCompetencia3Controller extends Controller
             if ($unidad == 1) {
                 $data2->where('lugares.propietarios_id', $empresa);
             } else {
-                $data2->where('datos.comercializador2_id', $empresa);
+                $data2->where('datos.comercializador', $empresa);
             }
         }
 
@@ -1386,7 +1426,7 @@ class EstudioCompetencia3Controller extends Controller
             $comercializadorIdsArray = explode(',', $comercializadorId);
 
             if (count($comercializadorIdsArray) > 1) {
-                $comercializadorId = $value->comercializador2_id;
+                $comercializadorId = $value->comercializador;
             }
 
             if (!isset($datos2[$comercializadorId])) {
@@ -1815,7 +1855,11 @@ class EstudioCompetencia3Controller extends Controller
                     $data2->where('datos.tipopautas_id', '=', 1);
                 }
                 if ($uso == 2) {
-                    $data2->where('datos.tipopautas_id', '!=', 1);
+                    $data2->where('datos.tipopautas_id', '!=', 1)
+                          ->where('datos.tipopautas_id', '!=', 7);
+                }
+                if ($uso == 7) {
+                    $data2->where('datos.tipopautas_id', '=', 7);
                 }
 
 
@@ -1908,7 +1952,11 @@ class EstudioCompetencia3Controller extends Controller
                     $data3->where('datos.tipopautas_id', '=', 1);
                 }
                 if ($uso == 2) {
-                    $data3->where('datos.tipopautas_id', '!=', 1);
+                    $data3->where('datos.tipopautas_id', '!=', 1)
+                          ->where('datos.tipopautas_id', '!=', 7);
+                }
+                if ($uso == 7) {
+                    $data3->where('datos.tipopautas_id', '=', 7);
                 }
 
 
@@ -2000,8 +2048,13 @@ class EstudioCompetencia3Controller extends Controller
 
         if ($uso == 1) {
             $data->where('datos.tipopautas_id', '=', 1);
-        } elseif ($uso == 2) {
-            $data->where('datos.tipopautas_id', '!=', 1);
+        }
+        if ($uso == 2) {
+            $data->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
+        }
+        if ($uso == 7) {
+            $data->where('datos.tipopautas_id', '=', 7);
         }
 
         $data = $data->get();
@@ -2070,8 +2123,13 @@ class EstudioCompetencia3Controller extends Controller
         // $data2->where('datos.tipopautas_id', '=', 1);
         if ($uso == 1) {
             $data2->where('datos.tipopautas_id', '=', 1);
-        } elseif ($uso == 2) {
-            $data2->where('datos.tipopautas_id', '!=', 1);
+        }
+        if ($uso == 2) {
+            $data2->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
+        }
+        if ($uso == 7) {
+            $data2->where('datos.tipopautas_id', '=', 7);
         }
 
         //$data2->groupBy('datos.clientes_id');
@@ -2144,8 +2202,13 @@ class EstudioCompetencia3Controller extends Controller
 
         if ($uso == 1) {
             $data->where('datos.tipopautas_id', '=', 1);
-        } elseif ($uso == 2) {
-            $data->where('datos.tipopautas_id', '!=', 1);
+        }
+        if ($uso == 2) {
+            $data->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
+        }
+        if ($uso == 7) {
+            $data->where('datos.tipopautas_id', '=', 7);
         }
 
         $data = $data->get();
@@ -2220,10 +2283,14 @@ class EstudioCompetencia3Controller extends Controller
 
         if ($uso == 1) {
             $data->where('datos.tipopautas_id', '=', 1);
-        } elseif ($uso == 2) {
-            $data->where('datos.tipopautas_id', '!=', 1);
         }
-
+        if ($uso == 2) {
+            $data->where('datos.tipopautas_id', '!=', 1)
+                  ->where('datos.tipopautas_id', '!=', 7);
+        }
+        if ($uso == 7) {
+            $data->where('datos.tipopautas_id', '=', 7);
+        }
         $data = $data->get();
 
         $ranking = [];
@@ -2271,7 +2338,7 @@ class EstudioCompetencia3Controller extends Controller
     }
 
 
-    public function rankingEmpresa($unidad, $periodo, $empresa, $uso)
+    public function rankingCentroComercial($unidad, $periodo, $empresa, $uso)
     {
         list($mes, $anno) = explode("-", $periodo);
         $mes = (int)$mes;
@@ -2279,7 +2346,12 @@ class EstudioCompetencia3Controller extends Controller
         $ultimoDiaMes = Carbon::create($anno, $mes)->endOfMonth()->endOfDay();
         $primerDiaMes = Carbon::create($anno, $mes)->startOfMonth();
         $tipoPublicidades = DB::connection('mysql2')->table('tipopublicidades')->where('tipolugares_id', $unidad)->get();
-        $tipoPublicidades2 = $tipoPublicidades->pluck('id')->toArray();
+        $tipoPublicidadesTradicionalId = $tipoPublicidades->where('tecnologia', 0)->pluck('id')->toArray();
+        $tipoPublicidadesLedId = $tipoPublicidades->where('tecnologia', 1)->pluck('id')->toArray();
+
+        $tradicionalIds = implode(',', $tipoPublicidadesTradicionalId);
+        $ledIds = implode(',', $tipoPublicidadesLedId);
+        $allIds = array_merge($tipoPublicidadesTradicionalId, $tipoPublicidadesLedId);
 
         $data = DB::connection('mysql2')->table('datos')
             ->join('anunciantes_productos', 'datos.producto2', '=', 'anunciantes_productos.id')
@@ -2294,42 +2366,20 @@ class EstudioCompetencia3Controller extends Controller
         }
 
         $data = $data->select(
+            
             'propietarios.descripcion as empresa',
             'propietarios.id as empresa_id',
             DB::raw('COUNT(DISTINCT datos.clientes_id) as clientes'),
             DB::raw('COUNT(DISTINCT CASE WHEN clientes.grupo_id = 2 THEN datos.clientes_id END) as clientes_directo'),
-            // Condiciones específicas para unidad 3
-            ($unidad == 3
-                ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id BETWEEN 3 AND 92 AND datos.tipopublicidades_id NOT IN (84, 85, 88) THEN datos.clientes_id END) as clientes_tradicional')
-                : ($unidad == 2
-                    ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id BETWEEN 93 AND 110 AND datos.tipopublicidades_id NOT IN (103) THEN datos.clientes_id END) as clientes_tradicional')
-                    : DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 1 THEN datos.clientes_id END) as clientes_tradicional')
-                )
-            ),
-            ($unidad == 3
-                ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (84, 85, 88) THEN datos.clientes_id END) as clientes_led')
-                : ($unidad == 2
-                    ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (103, 111) THEN datos.clientes_id END) as clientes_led')
-                    : DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 2 THEN datos.clientes_id END) as clientes_led')
-                )
-            ),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $tradicionalIds . ') THEN datos.clientes_id END) as clientes_tradicional'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $ledIds . ') THEN datos.clientes_id END) as clientes_led'),
             DB::raw('COUNT(DISTINCT anunciantes_productos.anunciante_id) as anunciantes'),
-            ($unidad == 3
-                ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id BETWEEN 3 AND 92 AND datos.tipopublicidades_id NOT IN (84, 85, 88) THEN anunciantes_productos.anunciante_id END) as anunciantes_tradicional')
-                : ($unidad == 2
-                    ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id BETWEEN 93 AND 110 AND datos.tipopublicidades_id NOT IN (103) THEN anunciantes_productos.anunciante_id END) as anunciantes_tradicional')
-                    : DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 1 THEN anunciantes_productos.anunciante_id END) as anunciantes_tradicional')
-                )
-            ),
-            ($unidad == 3
-                ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (84, 85, 88) THEN anunciantes_productos.anunciante_id END) as anunciantes_led')
-                : ($unidad == 2
-                    ? DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (103, 111) THEN anunciantes_productos.anunciante_id END) as anunciantes_led')
-                    : DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id = 2 THEN anunciantes_productos.anunciante_id END) as anunciantes_led')
-                )
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $tradicionalIds . ') THEN anunciantes_productos.anunciante_id END) as anunciantes_tradicional'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $ledIds . ') THEN anunciantes_productos.anunciante_id END) as anunciantes_led')
+        
             )
-        )
-            ->whereIn('datos.tipopublicidades_id', $tipoPublicidades2)
+        
+            ->whereIn('datos.tipopublicidades_id', $allIds)
             ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
             ->whereDate('datos.created_at', '>=', $primerDiaMes)
             ->when($empresa != 0, function ($query) use ($empresa, $unidad) {
@@ -2342,9 +2392,77 @@ class EstudioCompetencia3Controller extends Controller
                 return $query->where('datos.tipopautas_id', '=', 1);
             })
             ->when($uso == 2, function ($query) {
-                return $query->where('datos.tipopautas_id', '!=', 1);
+                return $query->where('datos.tipopautas_id', '!=', 1)
+                             ->where('datos.tipopautas_id', '!=', 7);
             })
-            ->groupBy('propietarios.id') // Cambiar según la agrupación que necesites
+            ->when($uso == 7, function ($query) {
+                return $query->where('datos.tipopautas_id','=', 7);
+            })
+            ->groupBy('propietarios.id') 
+            ->get();
+
+        return view('estudio-competencia.graficos.rankingEmpresa', compact('data'));
+    }
+
+
+    public function rankingEmpresa($unidad, $periodo, $empresa, $uso)
+    {
+        list($mes, $anno) = explode("-", $periodo);
+        $mes = (int)$mes;
+        $anno = (int)$anno;
+        $ultimoDiaMes = Carbon::create($anno, $mes)->endOfMonth()->endOfDay();
+        $primerDiaMes = Carbon::create($anno, $mes)->startOfMonth();
+        $tipoPublicidades = DB::connection('mysql2')->table('tipopublicidades')->where('tipolugares_id', $unidad)->get();
+        $tipoPublicidadesTradicionalId = $tipoPublicidades->where('tecnologia', 0)->pluck('id')->toArray();
+        $tipoPublicidadesLedId = $tipoPublicidades->where('tecnologia', 1)->pluck('id')->toArray();
+
+        $tradicionalIds = implode(',', $tipoPublicidadesTradicionalId);
+        $ledIds = implode(',', $tipoPublicidadesLedId);
+        $allIds = array_merge($tipoPublicidadesTradicionalId, $tipoPublicidadesLedId);
+
+        $data = DB::connection('mysql2')->table('datos')
+            ->join('anunciantes_productos', 'datos.producto2', '=', 'anunciantes_productos.id')
+            ->join('lugares', 'lugares.id', '=', 'datos.lugares_id')
+            ->join('clientes', 'clientes.id', '=', 'datos.clientes_id');
+
+        if ($unidad == 3 || $unidad==2) {
+            $data->join('propietarios', 'propietarios.id', '=', 'datos.comercializador2_id');
+        } else {
+            $data->join('propietarios', 'propietarios.id', '=', 'lugares.propietarios_id');
+        }
+
+        $data = $data->select(
+            'propietarios.descripcion as empresa',
+            'propietarios.id as empresa_id',
+            DB::raw('COUNT(DISTINCT datos.clientes_id) as clientes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN clientes.grupo_id = 2 THEN datos.clientes_id END) as clientes_directo'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $tradicionalIds . ') THEN datos.clientes_id END) as clientes_tradicional'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $ledIds . ') THEN datos.clientes_id END) as clientes_led'),
+            DB::raw('COUNT(DISTINCT anunciantes_productos.anunciante_id) as anunciantes'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $tradicionalIds . ') THEN anunciantes_productos.anunciante_id END) as anunciantes_tradicional'),
+            DB::raw('COUNT(DISTINCT CASE WHEN datos.tipopublicidades_id IN (' . $ledIds . ') THEN anunciantes_productos.anunciante_id END) as anunciantes_led')
+        
+            )
+            ->whereIn('datos.tipopublicidades_id', $allIds)
+            ->whereDate('datos.created_at', '<=', $ultimoDiaMes)
+            ->whereDate('datos.created_at', '>=', $primerDiaMes)
+            ->when($empresa != 0, function ($query) use ($empresa, $unidad) {
+                if ($unidad == 1) {
+                    return $query->where('lugares.propietarios_id', $empresa);
+                }
+                return $query->where('datos.comercializador2_id', $empresa);
+            })
+            ->when($uso == 1, function ($query) {
+                return $query->where('datos.tipopautas_id', '=', 1);
+            })
+            ->when($uso == 2, function ($query) {
+                return $query->where('datos.tipopautas_id', '!=', 1)
+                             ->where('datos.tipopautas_id', '!=', 7);
+            })
+            ->when($uso == 7, function ($query) {
+                return $query->where('datos.tipopautas_id','=', 7);
+            })
+            ->groupBy('propietarios.id') 
             ->get();
 
         return view('estudio-competencia.graficos.rankingEmpresa', compact('data'));

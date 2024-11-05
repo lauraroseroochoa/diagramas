@@ -193,7 +193,7 @@
                 depth: 25,
                 dataLabels: {
                     enabled: true,
-                    format: '{point.y} %' // Muestra el valor en la columna
+                    format: '{point.y}' // Muestra el valor en la columna
                 }
             }
         },
