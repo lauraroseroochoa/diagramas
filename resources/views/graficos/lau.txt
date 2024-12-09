@@ -485,3 +485,98 @@ public function rankingEmpresa($unidad, $periodo, $empresa, $uso)
 
         return view('estudio-competencia.graficos.rankingEmpresa', compact('data'));
     }
+
+
+
+
+
+
+foreach ($datos as $key => $value) {
+    if ($unidad == 1) {
+        $propietarioIds = $value->propietarios_id;
+    } else {
+        $propietarioIds = $value->comercializador2_id;
+    }
+
+    if (isset($empresas[$propietarioIds])) {
+
+       
+        $ubicacionId = $value->direccion
+        $referenciaId = $value->referencia2;
+
+        
+        if (!isset($datos2[$value->id][$empresas[$propietarioIds]->descripcion])) {
+            $datos2[$value->id][$empresas[$propietarioIds]->descripcion] = [
+                'total' => 0,
+                'color' => $empresas[$propietarioIds]->color,
+                'referencias' => [],
+                'ubicaciones' => [],
+            ];
+        }
+
+      
+        $datos2[$value->id][$empresas[$propietarioIds]->descripcion]['total']++;
+
+      
+        if (!isset($datos2[$value->id][$empresas[$propietarioIds]->descripcion]['ubicaciones'][$value->coordenadas])) {
+            $datos2[$value->id][$empresas[$propietarioIds]->descripcion]['ubicaciones'][$value->coordenadas] = 1;
+        }
+
+       
+        if (!isset($datos2[$value->id][$empresas[$propietarioIds]->descripcion]['referencias'][$ubicacionId][$referenciaId])) {
+            $datos2[$value->id][$empresas[$propietarioIds]->descripcion]['referencias'][$ubicacionId][$referenciaId] = [
+                'foto' => $value->foto2,
+                'fecha' => $value->created_at,
+            ];
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+195
+clientes
+
+ if ($empresa != 0) {
+                if ($unidad == 1) {
+                    $data->where('lugares.propietarios_id', $empresa);
+                } else if ($unidad == 2) {
+                    //validacion in_array para ver si $empresa esta presente en el arreglo X entonces usa datos.comercializ
+                    if(in_array($empresa,$arrayX)){
+                        $data->where('datos.comercializador2_id', $empresa);
+                    }else{
+                        $data->where('lugares.propietarios_id', $empresa);
+                    }
+                    
+                } else {
+                    $data->where('datos.comercializador2_id', $empresa);
+                }
+            }
+
+ANUNCIANTES
+34
+//select traer en un array X los id de comercializador2_id para la unidad $unidad
+
+62
+if ($empresa != 0) {
+            if ($unidad == 1) {
+                $data2->where('lugares.propietarios_id', $empresa);
+            } else if ($unidad == 2) {
+                //validacion in_array para ver si $empresa esta presente en el arreglo X entonces usa datos.comercializ
+                if(in_array($empresa,$arrayX)){
+                    $data2->where('datos.comercializador2_id', $empresa);
+                }else{
+                    $data2->where('lugares.propietarios_id', $empresa);
+                }
+                
+            } else {
+                $data2->where('datos.comercializador2_id', $empresa);
+            }
+        }

@@ -21,6 +21,13 @@
                 @endforeach
 
             </tbody>
+            <tfoot>
+                <tr>
+                    <th>Totales</th>
+                    <th>Cupos vendidos</th>
+                    <th>Total cupos LED</th>
+                </tr>
+            </tfoot>
 
         </table>
     </div>
@@ -89,4 +96,35 @@ var chart = new Highcharts.Chart({
         ]
     }]
 });
+
+var table1 = $('.datatable1').DataTable({
+        paging: false,
+        order: [[2, 'desc']],
+        dom: 'Brtp <"actions"> ',
+        orderCellsTop: true,
+        fixedHeader: true,
+        scrollX: true,
+        scrollY: "60vh",
+        scrollCollapse: true,
+        buttons: [
+            'excel'
+        ],
+        footerCallback: function (row, data, start, end, display) {
+            var api = this.api();
+
+            // Calcula el total de cada columna
+            var totalEdad = api.column(1, { page: 'current' }).data().reduce(function (a, b) {
+                return parseFloat(a) + parseFloat(b);
+            }, 0);
+
+            var totalPosicion = api.column(2, { page: 'current' }).data().reduce(function (a, b) {
+                return parseFloat(a) + parseFloat(b);
+            }, 0);
+
+
+            // Muestra los totales en el pie de página
+            $(api.column(1).footer()).html(totalEdad);
+            $(api.column(2).footer()).html(totalPosicion);
+        }
+    });
 </script>
